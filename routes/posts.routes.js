@@ -2,7 +2,7 @@ const express = require('express');
 const router = express.Router();
 const { upload } = require('../utils/multer');
 
-const { createPost, getPostById, getPublicPosts, updatePost, deletePost, addLike, addComment, getUsersWhoLikedPost, getComments, getRandomPost, removeLike, removeComment } = require('../controllers/posts.controller');
+const { createPost, getPostById, getPublicPosts, updatePost, deletePost, addLike, addComment, getUsersWhoLikedPost, getComments, getRandomPost, removeLike, getTimeline } = require('../controllers/posts.controller');
 const { authMiddleware } = require('../middlewares/auth.middleware');
 
 router.post('/create', authMiddleware, upload.single('content'), createPost);
@@ -16,6 +16,6 @@ router.get('/:postId/likes', authMiddleware, getUsersWhoLikedPost);
 router.get('/:postId/comments', authMiddleware, getComments);
 router.get('/get/random', authMiddleware, getRandomPost);
 router.delete('/:postId/like', authMiddleware, removeLike);
-router.delete('/:postId/comment', authMiddleware, removeComment);
+router.get('/get/timeline', authMiddleware, getTimeline);
 
 module.exports = router;

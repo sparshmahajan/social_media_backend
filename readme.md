@@ -68,8 +68,7 @@ SignUp Body = {
 | Get User who liked post|        /:postId/likes            | GET    |          \_\_        | OK          |
 |   Get Random Posts     |        /posts/get/random         | GET    |          \_\_        | OK          |
 |   Remove Like          |        /:postId/like             | DELETE |          \_\_        | OK          |
-|   Remove Comment       |        /:postId/comment          | DELETE |          \_\_        | OK          |
-
+|   Get user Timeline    |        /posts/get/timeline       | GET    |          \_\_        | OK          |
 ---
 
 

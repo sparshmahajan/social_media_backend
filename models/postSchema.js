@@ -1,4 +1,7 @@
 const mongoose = require('mongoose');
+const moment = require('moment-timezone');
+
+const dateIndia = moment.tz(Date.now(), 'Asia/Kolkata');
 
 const postSchema = new mongoose.Schema({
     userId: {
@@ -31,8 +34,8 @@ const postSchema = new mongoose.Schema({
         required: true
     },
     createdAt: {
-        type: Date,
-        default: Date.now
+        type: String,
+        default: dateIndia.toString()
     },
     likes: {
         type: [{

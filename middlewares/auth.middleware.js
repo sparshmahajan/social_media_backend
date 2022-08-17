@@ -4,7 +4,7 @@ const jwt = require("jsonwebtoken");
 const authMiddleware = async (req, res, next) => {
     const authHeader = req.headers.authorization;
     if (!authHeader) {
-        res.status(401).send({ message: "Unauthorized" });
+        return res.status(401).send({ message: "Unauthorized" });
     }
     const token = authHeader.split(" ")[1];
 
@@ -15,10 +15,10 @@ const authMiddleware = async (req, res, next) => {
             next();
         } catch (err) {
             console.log(err);
-            res.status(401).send({ message: "Invalid Token" });
+            return res.status(401).send({ message: "Invalid Token" });
         }
     } else {
-        res.status(401).send({ message: "Unauthorized" });
+        return res.status(401).send({ message: "Unauthorized" });
     }
 };
 

@@ -1,4 +1,7 @@
 const mongoose = require('mongoose');
+const moment = require('moment-timezone');
+
+const dateIndia = moment.tz(Date.now(), 'Asia/Kolkata');
 
 const userSchema = new mongoose.Schema({
     name: {
@@ -16,10 +19,9 @@ const userSchema = new mongoose.Schema({
         required: true,
         minlength: 8
     },
-    created_at: {
-        type: Date,
-        default: Date.now,
-        required: true
+    createdAt: {
+        type: String,
+        default: dateIndia.toString()
     },
     gender: {
         type: String,

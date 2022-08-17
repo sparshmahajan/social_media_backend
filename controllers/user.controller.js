@@ -36,7 +36,7 @@ const signup = async (req, res) => {
                 return res.status(500).send({ message: "Server Error" });
             }
 
-            const { _id, name, email, user_name, phone_number, profile, gender } = user;
+            const { _id, name, email, user_name, phone_number, profile, gender, createdAt } = user;
             return res.status(201).json({
                 message: "Signup Successful",
                 userId: _id,
@@ -45,7 +45,8 @@ const signup = async (req, res) => {
                 user_name: user_name,
                 phone_number: phone_number,
                 profile: profile,
-                gender: gender
+                gender: gender,
+                createdAt: createdAt
             });
         });
     });
@@ -258,7 +259,7 @@ const deleteUser = async (req, res) => {
             return res.status(500).send({ message: "Server Error" });
         }
 
-        const { following, followers, liked_posts, commented_posts } = user;
+        const { following, followers, liked_posts, commented_posts, blocked_users, blocked_by } = user;
         following.forEach(followingId => {
             userSchema.findByIdAndUpdate(followingId, { $pull: { followers: userId } }, function (error, unfollowedUser) {
                 if (error) {
@@ -267,6 +268,7 @@ const deleteUser = async (req, res) => {
                 }
             });
         });
+
         followers.forEach(followersId => {
             userSchema.findByIdAndUpdate(followersId, { $pull: { following: userId } }, function (error, unfollowingUser) {
                 if (error) {
@@ -287,6 +289,24 @@ const deleteUser = async (req, res) => {
 
         commented_posts.forEach(commentedPostId => {
             postSchema.findByIdAndUpdate(commentedPostId, { $pull: { comments: { userId: userId } } }, function (error, uncommentedPost) {
+                if (error) {
+                    console.log(error);
+                    return res.status(500).send({ message: "Server Error" });
+                }
+            });
+        });
+
+        blocked_users.forEach(blockedUserId => {
+            userSchema.findByIdAndUpdate(blockedUserId, { $pull: { blocked_by: userId } }, function (error, unblockedUser) {
+                if (error) {
+                    console.log(error);
+                    return res.status(500).send({ message: "Server Error" });
+                }
+            });
+        });
+
+        blocked_by.forEach(blockedById => {
+            userSchema.findByIdAndUpdate(blockedById, { $pull: { blocked_users: userId } }, function (error, unblockedByUser) {
                 if (error) {
                     console.log(error);
                     return res.status(500).send({ message: "Server Error" });
@@ -505,9 +525,9 @@ const getBlockedUsers = async (req, res) => {
             return res.status(500).send({ message: "Server Error" });
         }
 
-        const { blockedUsers } = user;
+        const { blocked_users } = user;
 
-        userSchema.find({ _id: { $in: blockedUsers } }, function (error, users) {
+        userSchema.find({ _id: { $in: blocked_users } }, function (error, users) {
             if (error) {
                 console.log(error);
                 return res.status(500).send({ message: "Server Error" });
@@ -548,7 +568,7 @@ const getAllLikedPosts = async (req, res) => {
 const getUserPosts = async (req, res) => {
     const { userId } = req.user;
 
-    postSchema.find({ user_id: userId }, function (error, posts) {
+    postSchema.find({ userId: userId }, function (error, posts) {
         if (error) {
             console.log(error);
             return res.status(500).send({ message: "Server Error" });

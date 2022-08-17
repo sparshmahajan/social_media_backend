@@ -81,7 +81,8 @@ const updatePost = async (req, res) => {
             console.log(error);
             return res.status(500).send({ message: "Server Error" });
         }
-        if (post.userId !== ObjectId(userId)) {
+        if (JSON.stringify(post.userId) !== JSON.stringify(userId)) {
+            console.log(post.userId, userId);
             return res.status(403).send({ message: "You are not authorized to update this post" });
         }
         postSchema.findByIdAndUpdate(postId, {
@@ -194,6 +195,7 @@ const getPublicPosts = async (req, res) => {
 
 const getRandomPost = async (req, res) => {
     const { userId } = req.user;
+
     postSchema.find({ $and: [{ userId: { $ne: ObjectId(userId) } }, { postStatus: "public" }] }, function (error, posts) {
         if (error) {
             console.log(error);
@@ -241,6 +243,9 @@ const addLike = async (req, res) => {
             return res.status(500).send({ message: "Server Error" });
         }
 
+        if (!post) {
+            return res.status(404).send({ message: "Post Not Found" });
+        }
         const { likes } = post;
         const isLiked = likes.find(like => like.userId == userId);
         if (isLiked) {
@@ -326,6 +331,7 @@ const getUsersWhoLikedPost = async (req, res) => {
             });
             res.status(200).json({
                 users: resultUsers,
+                likesCount: resultUsers.length,
                 message: "Users who liked post"
             });
         }).sort({ createdAt: -1 });
@@ -399,30 +405,50 @@ const removeLike = async (req, res) => {
     });
 }
 
-const removeComment = async (req, res) => {
-    const { postId } = req.params;
+const getTimeline = async (req, res) => {
     const { userId } = req.user;
 
-    postSchema.findByIdAndUpdate(postId, { $pull: { comments: { userId: userId } } }, { new: true }, function (error, post) {
+    userSchema.findById(userId, function (error, user) {
         if (error) {
             console.log(error);
             return res.status(500).send({ message: "Server Error" });
         }
 
-        userSchema.findByIdAndUpdate(userId, { $pull: { commented_posts: postId } }, function (error, user) {
+        const { following } = user;
+
+        let followingUsersIds;
+        if (following) {
+            followingUsersIds = following.map(followingUser => followingUser);
+        }
+        followingUsersIds.push(userId);
+        postSchema.find({ userId: { $in: followingUsersIds } }, function (error, posts) {
             if (error) {
                 console.log(error);
                 return res.status(500).send({ message: "Server Error" });
             }
 
-            const { comments } = post;
-            res.status(200).json({
-                comments: comments,
-                commentsCount: comments.length,
-                message: "Comment removed Successfully"
+            const resultPosts = posts.map(post => {
+                return {
+                    _id: post._id,
+                    userId: post.userId,
+                    user_name: post.user_name,
+                    profile: post.profile,
+                    content: post.content,
+                    createdAt: post.createdAt,
+                    likesCount: post.likes.length,
+                    commentsCount: post.comments.length,
+                    isLiked: post.likes.find(like => like.userId == userId) ? true : false,
+                    isCommented: post.comments.find(comment => comment.userId == userId) ? true : false,
+                }
             });
-        });
+            res.status(200).json({
+                posts: resultPosts,
+                postsCount: resultPosts.length,
+                message: "Timeline"
+            });
+        }).sort({ createdAt: -1 });
     });
 }
 
-module.exports = { createPost, getPostById, updatePost, deletePost, getPublicPosts, addLike, addComment, getUsersWhoLikedPost, getComments, getRandomPost, removeLike, removeComment };
+
+module.exports = { createPost, getPostById, updatePost, deletePost, getPublicPosts, addLike, addComment, getUsersWhoLikedPost, getComments, getRandomPost, removeLike, getTimeline };
